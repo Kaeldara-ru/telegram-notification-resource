@@ -21,6 +21,7 @@ cat > "$payload" <&0
 BOT_TOKEN=$(jq -r '(.source.bot_token // "")' < "$payload")
 text="$(jq -r '(.params.text // "text is empty")' < "${payload}")"
 CHAT_ID="$(jq -r '(.params.chat_id // "")' < "${payload}")"
+TOPIC_ID="$(jq -r '(.params.topic_id // "")' < "${payload}")"
 text_file_path="$(jq -r '(.params.text_file // "")' < "${payload}")"
 PARSE_MODE="$(jq -r '(.params.parse_mode // "Markdown")' < "${payload}")"
 
@@ -48,12 +49,17 @@ if [ -z "$CHAT_ID" ]; then
      exit 1
 fi
 
+if [ -z "$TOPIC_ID" ]; then
+     printf "\n ${RED} Error! The Telegram topic ID is not specified! Please, add the 'params.topic_id' property to your resource parameters. ${NC}\n"
+     exit 1
+fi
+
 #
 # Send the message to the Telegram
 #
 text=$(echo "$text" | envsubst)
 URL="https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"
-curl -X POST --data chat_id=${CHAT_ID//\"/} --data text="${text}" --data parse_mode="$PARSE_MODE" "$URL"
+curl -X POST --data chat_id=${CHAT_ID//\"/} --data topic_id=${TOPIC_ID//\"/} --data text="${text}" --data parse_mode="$PARSE_MODE" "$URL"
 
 #
 # print the output
